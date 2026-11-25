@@ -93,7 +93,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return true
     }
 
-    fun setStatus(message: String) {
+    fun showStatus(message: String) {
         status = message
     }
 

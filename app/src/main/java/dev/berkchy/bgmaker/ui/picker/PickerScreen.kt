@@ -91,7 +91,7 @@ fun PickerScreen(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
         if (uri == null) {
-            viewModel.setStatus("Selection cancelled")
+            viewModel.showStatus("Selection cancelled")
         } else if (viewModel.selectImage(uri)) {
             onConfigure()
         }
@@ -109,7 +109,7 @@ fun PickerScreen(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
         hasAccess = granted
-        if (!granted) viewModel.setStatus("Recent photos need read access. Use “Choose an image” instead.")
+        if (!granted) viewModel.showStatus("Recent photos need read access. Use “Choose an image” instead.")
     }
 
     var recent by remember { mutableStateOf<List<MediaImage>>(emptyList()) }
