@@ -1,6 +1,7 @@
 package dev.berkchy.bgmaker.ui.result
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -92,13 +93,14 @@ fun ProgressScreen(
                     modifier = Modifier.size(72.dp),
                     shape = MaterialTheme.shapes.large,
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        "${(fraction * 100).toInt()}%",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "${(fraction * 100).toInt()}%",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
                 }
                 Spacer(Modifier.height(24.dp))
                 Text(

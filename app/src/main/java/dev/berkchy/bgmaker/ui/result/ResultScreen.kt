@@ -139,8 +139,9 @@ fun ResultScreen(
                     InfoRow("Mode", result.mode.value)
                     InfoRow("Prefix", "${result.prefix}_r_c.tga")
                     InfoRow("Output", result.outputRoot.name)
-                    if (result.backupName != null) {
-                        InfoRow("Backup", result.backupName)
+                    val backupName = result.backupName
+                    if (backupName != null) {
+                        InfoRow("Backup", backupName)
                     }
                 }
             }
