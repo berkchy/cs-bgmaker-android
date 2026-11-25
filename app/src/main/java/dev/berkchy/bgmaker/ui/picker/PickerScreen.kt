@@ -42,6 +42,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,9 +80,22 @@ fun PickerScreen(
     onSettings: () -> Unit,
 ) {
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(viewModel.status) {
+        viewModel.status?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearStatus()
+        }
+    }
     val pickLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> if (uri != null) viewModel.selectImage(uri) }
+    ) { uri ->
+        if (uri == null) {
+            viewModel.setStatus("Selection cancelled")
+        } else if (viewModel.selectImage(uri)) {
+            onConfigure()
+        }
+    }
 
     val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_IMAGES
@@ -92,7 +107,10 @@ fun PickerScreen(
     }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { granted -> hasAccess = granted }
+    ) { granted ->
+        hasAccess = granted
+        if (!granted) viewModel.setStatus("Recent photos need read access. Use “Choose an image” instead.")
+    }
 
     var recent by remember { mutableStateOf<List<MediaImage>>(emptyList()) }
     LaunchedEffect(hasAccess) {
@@ -100,6 +118,7 @@ fun PickerScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopBar(
                 title = "BG Maker",
@@ -270,7 +289,9 @@ fun PickerScreen(
                             Thumbnail(
                                 image = image,
                                 selected = selected?.uri == image.uri,
-                                onClick = { viewModel.selectImage(image.uri) },
+                                onClick = {
+                                    if (viewModel.selectImage(image.uri)) onConfigure()
+                                },
                             )
                         }
                     }
@@ -323,8 +344,14 @@ private fun StepRow(number: String, text: String) {
 private fun Thumbnail(image: MediaImage, selected: Boolean, onClick: () -> Unit) {
     val context = LocalContext.current
     var bitmap by remember(image.uri) { mutableStateOf<Bitmap?>(null) }
+    var failed by remember(image.uri) { mutableStateOf(false) }
     LaunchedEffect(image.uri) {
-        bitmap = withContext(Dispatchers.IO) { ImageLoader.decode(context, image.uri, 240) }
+        bitmap = null
+        failed = false
+        val loaded = withContext(Dispatchers.IO) {
+            runCatching { ImageLoader.decode(context, image.uri, 240) }.getOrNull()
+        }
+        if (loaded != null) bitmap = loaded else failed = true
     }
     Card(
         onClick = onClick,
@@ -347,10 +374,17 @@ private fun Thumbnail(image: MediaImage, selected: Boolean, onClick: () -> Unit)
                 )
             } else {
                 Box(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Filled.Image,
+                        contentDescription = if (failed) "Preview unavailable" else null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             Box(
                 modifier = Modifier

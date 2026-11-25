@@ -119,7 +119,7 @@ the Actions run's artifact list or from `gh run view --web`.
 
 ## Fonts
 
-`app/src/main/res/font/google_sans_*.ttf` contains **Google Sans** from the
+`app/src/main/res/font/google_sans_regular.ttf` contains **Google Sans** from the
 [googlefonts/googlesans](https://github.com/googlefonts/googlesans) project (Apache 2.0).
 The regular weight is the default family for every typography style in `theme/Type.kt`.
 

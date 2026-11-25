@@ -10,8 +10,8 @@ import dev.berkchy.bgmaker.R
 
 val GoogleSans = FontFamily(
     Font(R.font.google_sans_regular, FontWeight.Normal),
-    Font(R.font.google_sans_medium, FontWeight.Medium),
-    Font(R.font.google_sans_bold, FontWeight.Bold),
+    Font(R.font.google_sans_regular, FontWeight.Medium),
+    Font(R.font.google_sans_regular, FontWeight.Bold),
 )
 
 private val Base = Typography(

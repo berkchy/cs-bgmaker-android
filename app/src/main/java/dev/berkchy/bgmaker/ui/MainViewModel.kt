@@ -1,6 +1,7 @@
 package dev.berkchy.bgmaker.ui
 
 import android.app.Application
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.runtime.getValue
@@ -53,6 +54,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var error by mutableStateOf<String?>(null)
         private set
 
+    var status by mutableStateOf<String?>(null)
+        private set
+
     private var job: Job? = null
 
     fun outputRoot(): File = repository.outputRoot(settings)
@@ -64,11 +68,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         repository.save(settings)
     }
 
-    fun selectImage(uri: Uri) {
+    fun selectImage(uri: Uri): Boolean {
         val context = getApplication<Application>()
-        val bitmap = ImageLoader.decode(context, uri) ?: run {
-            error = "That image could not be opened. Try another file."
-            return
+        val bitmap = runCatching { ImageLoader.decode(context, uri) }.getOrNull()
+        if (bitmap == null) {
+            status = "That image could not be read. Try another one."
+            return false
+        }
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+            )
         }
         selectedImage = SelectedImage(
             uri = uri,
@@ -78,6 +89,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
         error = null
         result = null
+        status = null
+        return true
+    }
+
+    fun setStatus(message: String) {
+        status = message
+    }
+
+    fun clearStatus() {
+        status = null
     }
 
     fun startOver() {

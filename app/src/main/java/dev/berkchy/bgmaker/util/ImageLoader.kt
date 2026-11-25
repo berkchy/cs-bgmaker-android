@@ -4,7 +4,9 @@ import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 
@@ -35,6 +37,17 @@ object ImageLoader {
     }
 
     fun decode(context: Context, uri: Uri, maxDimension: Int = 2048): Bitmap? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = ImageDecoder.createSource(context.contentResolver, uri)
+            return ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                var sample = 1
+                while (maxOf(info.size.width, info.size.height) / sample > maxDimension) {
+                    sample *= 2
+                }
+                decoder.setTargetSampleSize(sample)
+                decoder.isMutableRequired = false
+            }
+        }
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         context.contentResolver.openInputStream(uri)?.use {
             BitmapFactory.decodeStream(it, null, bounds)
