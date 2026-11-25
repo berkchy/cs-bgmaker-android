@@ -1,5 +1,6 @@
 package dev.berkchy.bgmaker.core
 
+import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
 class ConversionEngine {
