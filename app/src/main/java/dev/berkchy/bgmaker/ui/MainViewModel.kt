@@ -70,11 +70,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectImage(uri: Uri): Boolean {
         val context = getApplication<Application>()
-        val bitmap = runCatching { ImageLoader.decode(context, uri) }.getOrNull()
-        if (bitmap == null) {
+        val decoded = runCatching { ImageLoader.decode(context, uri) }.getOrNull()
+        if (decoded == null) {
             status = "That image could not be read. Try another one."
             return false
         }
+        val bitmap = ImageLoader.software(decoded)
         runCatching {
             context.contentResolver.takePersistableUriPermission(
                 uri,

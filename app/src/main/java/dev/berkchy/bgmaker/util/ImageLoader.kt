@@ -36,17 +36,26 @@ object ImageLoader {
         return 0L
     }
 
+    fun software(bitmap: Bitmap): Bitmap =
+        if (bitmap.config == Bitmap.Config.HARDWARE) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, true)
+        } else {
+            bitmap
+        }
+
     fun decode(context: Context, uri: Uri, maxDimension: Int = 2048): Bitmap? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val source = ImageDecoder.createSource(context.contentResolver, uri)
-            return ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+            val decoded = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
                 var sample = 1
                 while (maxOf(info.size.width, info.size.height) / sample > maxDimension) {
                     sample *= 2
                 }
                 decoder.setTargetSampleSize(sample)
+                decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE)
                 decoder.isMutableRequired = false
             }
+            return software(decoded)
         }
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         context.contentResolver.openInputStream(uri)?.use {
@@ -56,9 +65,12 @@ object ImageLoader {
 
         var sample = 1
         while (maxOf(bounds.outWidth, bounds.outHeight) / sample > maxDimension) sample *= 2
-        val options = BitmapFactory.Options().apply { inSampleSize = sample }
-        return context.contentResolver.openInputStream(uri)?.use {
-            BitmapFactory.decodeStream(it, null, options)
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return context.contentResolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, options)?.let(::software)
         }
     }
 
